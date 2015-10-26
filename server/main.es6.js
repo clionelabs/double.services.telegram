@@ -25,4 +25,6 @@ Meteor.startup(function() {
   setupIndexes();
 
   setupBots();
+
+  TelegramService.Adapter.startup();
 });

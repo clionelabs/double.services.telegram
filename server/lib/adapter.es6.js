@@ -1,9 +1,17 @@
+/**
+ * This class relay TelegramService.Messages to D.Channels and D.Messages, and vice versa
+ */
 TelegramService.Adapter = {
 
+  /**
+   * upon startup, it will
+   *   1) update all existing chats
+   *   2) observe new outing message from dashboard to send to telegram
+   *   3) observe new incoming message from telgram (via TelegramService.Messages)
+   */
   startup() {
     let self = this;
     console.log("[TelegramService.Adapter] startup");
-    self._updateAllChats();
     self._startObserveNew();
     self._observeOutingMessages();
   },
@@ -30,8 +38,8 @@ TelegramService.Adapter = {
     if (dChannel.category !== D.Channels.Categories.TELEGRAM) {
       return;
     }
-    let chat = TelegramService.Chats.findOne({id: dChannel.extra.chat_id});
-    let bot = TelegramService.Bots.findOne({telegramId: chat.telegramId});
+    let chat = TelegramService.Chats.findOne({identifier: dChannel.identifier});
+    let bot = TelegramService.Bots.findOne({telegramId: chat.botId});
     let content = self._encodeMessage(dMessage.content);
     let result = bot.sendMessage({
       chat_id: chat.id,
@@ -42,25 +50,28 @@ TelegramService.Adapter = {
     }
   },
 
+  /**
+   * Whenever new messages come in, TelegramService.Chat will get updated.
+   * We observe the change on TelegramService.Chat, and then do an update
+   * to sync D.Messages/Channels from TelegramService.Messages/Chats
+   */
   _startObserveNew() {
     let self = this;
     TelegramService.Chats.find().observe({
       adapter: self,
+
+      added(chat) {
+        this.adapter._updateChat(chat);
+      },
+
       changed(newChat, oldChat) {
         this.adapter._updateChat(newChat);
       }
     });
   },
 
-  _updateAllChats() {
-    let self = this;
-    TelegramService.Chats.find().forEach(function(chat) {
-      self._updateChat(chat);
-    });
-  },
-
   _dChannelSelector(chat) {
-    return {category: D.Channels.Categories.TELEGRAM, identifier: chat.id};
+    return {category: D.Channels.Categories.TELEGRAM, identifier: chat.identifier};
   },
 
   _upsertDChannel(chat) {
@@ -69,7 +80,7 @@ TelegramService.Adapter = {
     let options = {
       $set: {
         'category': D.Channels.Categories.TELEGRAM,
-        'identifier': chat.id,
+        'identifier': chat.identifier,
         'extra.chat_id': chat.id,
         'extra.type': chat.type,
         'extra.first_name': chat.first_name,
@@ -132,8 +143,7 @@ TelegramService.Adapter = {
     console.log("[TelegramService.Adapter] updating chat: ", JSON.stringify(chat));
 
     let dChannel = self._upsertDChannel(chat);
-
-    TelegramService.Messages.find({date: {$gt: dChannel.extra.lastMessageTS}}).forEach(function(message) {
+    chat.findMessages({date: {$gt: dChannel.extra.lastMessageTS}}).forEach(function(message) {
       self._insertMessage(message, dChannel._id);
     });
   }

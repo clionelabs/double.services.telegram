@@ -1,11 +1,10 @@
 let setupIndexes = function() {
   TelegramService.Messages._ensureIndex({
-    chat_id: 1,
-    id: 1
+    chatIdentifier: 1
   });
 
   TelegramService.Chats._ensureIndex({
-    id: 1
+    identifier: 1
   });
 };
 

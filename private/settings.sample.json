@@ -1,0 +1,14 @@
+{
+  "telegramService": {
+    "slackLog": {
+      "channel": {
+        "CHANNEL_NAME"
+      }
+    }
+  },
+
+  "slackLog": {
+    "token": "API_TOKEN"
+  }
+}
+

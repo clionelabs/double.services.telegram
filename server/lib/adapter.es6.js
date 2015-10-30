@@ -27,8 +27,18 @@ TelegramService.Adapter = {
   },
 
   _encodeMessage(text) {
-    // TODO: encode text. e.g. emoji
-    return text;
+    // encode emoji symbol to unicode
+    let encodedText = text.replace(/:(.*?):/g, function(match, p1) {
+      let ret = match;
+      if (emojiOneSupportedList[p1]) {
+        let unicode = emojiOneSupportedList[p1]['unicode'];
+        let converted = String.fromCodePoint('0x' + unicode);
+        ret = converted;
+      }
+      console.log("[encodeText]: ", p1, ret);
+      return ret;
+    });
+    return encodedText;
   },
 
   _handleOutingMessage(dMessage) {

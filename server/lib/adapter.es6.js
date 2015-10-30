@@ -122,7 +122,7 @@ TelegramService.Adapter = {
     let userName = message.from.first_name;
     let inOut = !!message.update_id? D.Messages.InOut.IN: D.Messages.InOut.OUT; // IN message is from webhook, trigger, so will have an update_id
     let isAutoReply = message.text === autoReplyContent;
-    let timestamp = message.date;
+    let timestamp = message.date * 1000; // convert to ms
     let decodedText = self._decodeText(message);
 
     let options = {
@@ -153,7 +153,8 @@ TelegramService.Adapter = {
     console.log("[TelegramService.Adapter] updating chat: ", JSON.stringify(chat));
 
     let dChannel = self._upsertDChannel(chat);
-    chat.findMessages({date: {$gt: dChannel.extra.lastMessageTS}}).forEach(function(message) {
+    let afterDate = dChannel.extra.lastMessageTS / 1000;
+    chat.findMessages({date: {$gt: afterDate}}).forEach(function(message) {
       self._insertMessage(message, dChannel._id);
     });
   }

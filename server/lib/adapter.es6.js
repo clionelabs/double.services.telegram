@@ -117,6 +117,10 @@ TelegramService.Adapter = {
   _decodeText(message) {
     // Ref: Telegram message format: https://core.telegram.org/bots/api#message
     if (message.audio) {
+      let fileId = message.audio.file_id;
+      let link = this._fileLink(message.botId, fileId);
+      return `[Audio] ${link}`;
+
     } else if (message.document) {
       let fileId = message.document.file_id;
       let fileName = message.document.file_name;

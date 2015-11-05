@@ -94,7 +94,8 @@ TelegramService.Adapter = {
         'extra.chat_id': chat.id,
         'extra.type': chat.type,
         'extra.first_name': chat.first_name,
-        'extra.last_name': chat.last_name
+        'extra.last_name': chat.last_name,
+        'extra.title': chat.title
       },
       $setOnInsert: {
         'extra.lastMessageTS': 0
@@ -158,8 +159,35 @@ TelegramService.Adapter = {
       let content = JSON.stringify(message.location); // TODO: format this better
       return `[Location] ${content}`;
 
-    } else { // text message
+    } else if (message.new_chat_participant) {
+      let content = JSON.stringify(message.new_chat_participant); // TODO: format this better
+      return `[New Participant] ${content}`;
+
+    } else if (message.left_chat_participant) {
+      let content = JSON.stringify(message.left_chat_participant); // TODO: format this better
+      return `[Participant Left] ${content}`;
+
+    } else if (message.new_chat_title) {
+      let content = message.new_chat_title;
+      return `[New Chat Title] ${content}`;
+
+    } else if (message.new_chat_photo) {
+      let lastPhoto = _.last(message.new_chat_photo);
+      let fileId = lastPhoto.file_id;
+      let link = this._fileLink(message.botId, fileId);
+      return `[New Chat Photo] ${link}`;
+
+    } else if (message.delete_chat_photo) {
+      return '[Delete Chat Photo]';
+
+    } else if (message.group_chat_created) {
+      return '[Group Chat Created]';
+
+    } else if (message.text) { // text message
       return message.text;
+    } else {
+      let content = JSON.stringify(message);
+      return `[Unhandled Message Type] ${content}`;
     }
   },
 

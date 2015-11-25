@@ -198,7 +198,7 @@ TelegramService.Adapter = {
     let autoReplyContent = D.Configs.get(D.Configs.Keys.AUTO_RESPONSE_MESSAGE);
     let userName = message.from.first_name;
     let inOut = !!message.update_id? D.Messages.InOut.IN: D.Messages.InOut.OUT; // IN message is from webhook, trigger, so will have an update_id
-    let isAutoReply = message.text === autoReplyContent;
+    let isAutoReply = message.text === self._encodeMessage(autoReplyContent);
     let timestamp = message.date * 1000; // convert to ms
     let decodedText = self._decodeText(message);
 
